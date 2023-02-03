@@ -13,25 +13,16 @@ if [ -z "$CUPSPASSWORD" ]; then
 fi
 
 if [ $(grep -ci $CUPSADMIN /etc/shadow) -eq 0 ]; then
-    adduser -S -G lpadmin --no-create-home $CUPSADMIN 
+    useradd -G lpadmin --no-create-home $CUPSADMIN
 fi
 echo $CUPSADMIN:$CUPSPASSWORD | chpasswd
 
-mkdir -p /config/ppd
-mkdir -p /services
-rm -rf /etc/avahi/services/*
-rm -rf /etc/cups/ppd
-ln -s /config/ppd /etc/cups
-if [ `ls -l /services/*.service 2>/dev/null | wc -l` -gt 0 ]; then
-	cp -f /services/*.service /etc/avahi/services/
-fi
-if [ `ls -l /config/printers.conf 2>/dev/null | wc -l` -eq 0 ]; then
-    touch /config/printers.conf
-fi
-cp /config/printers.conf /etc/cups/printers.conf
-
-if [ `ls -l /config/cupsd.conf 2>/dev/null | wc -l` -ne 0 ]; then
-    cp /config/cupsd.conf /etc/cups/cupsd.conf
+# restore default cups config in case user does not have any
+if [ ! -f /etc/cups/cupsd.conf ]; then
+    echo "***************************************"
+    echo "* Copying default configuration files *"
+    echo "***************************************"
+    cp -rpnv /cups-config-default/* /etc/cups/
 fi
 
 /usr/sbin/avahi-daemon --daemonize
