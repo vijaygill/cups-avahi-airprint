@@ -1,9 +1,11 @@
 FROM ubuntu:latest
 
-RUN apt update && apt upgrade && \
-	apt install -y \
+RUN DEBIAN_FRONTEND=noninteractive apt update && \
+    DEBIAN_FRONTEND=noninteractive apt upgrade -y && \
+	DEBIAN_FRONTEND=noninteractive apt install -y \
     cups \
     avahi-daemon \
+    foomatic-db \
 	inotify-tools \
     printer-driver-brlaser \
     printer-driver-cups-pdf \
@@ -40,6 +42,9 @@ RUN sed -i 's/Listen localhost:631/Listen 0.0.0.0:631/' /etc/cups/cupsd.conf && 
 	echo "ServerAlias *" >> /etc/cups/cupsd.conf && \
 	echo "DefaultEncryption Never" >> /etc/cups/cupsd.conf && \
 	echo "AnonDirName /print2pdf" >> /etc/cups/cups-pdf.conf && \
+    echo "image/urf urf string(0,UNIRAST)" > /usr/share/cups/mime/airprint.types && \
+    echo "image/urf application/vnd.cups-postscript 66 pdftops" > /usr/share/cups/mime/airprint.convs && \
+    echo "image/urf application/pdf 100 pdftoraster" > /usr/share/cups/mime/airprint.convs && \
     mv /etc/cups /cups-config-default && \
     ln -sf /cups-config /etc/cups && \
     rm -rf /etc/avahi/services && \
